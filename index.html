@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <title>研習滿意度調查｜大灣高中</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,6 +20,7 @@
     --line:#D8D2C0;
     --card:#FFFEFA;
   }
+  html{ -webkit-text-size-adjust:100%; text-size-adjust:100%; }
   *{box-sizing:border-box;}
   body{
     margin:0;
@@ -31,11 +32,14 @@
     color:var(--ink);
     min-height:100vh;
     -webkit-font-smoothing:antialiased;
+    touch-action:manipulation;
   }
   .wrap{
     max-width:560px;
     margin:0 auto;
-    padding:36px 20px 80px;
+    padding:36px 20px calc(80px + env(safe-area-inset-bottom, 0px));
+    padding-left:calc(20px + env(safe-area-inset-left, 0px));
+    padding-right:calc(20px + env(safe-area-inset-right, 0px));
   }
   header{
     text-align:center;
@@ -99,7 +103,7 @@
     border:1px solid var(--line);
     border-radius:3px;
     padding:14px 42px 14px 14px;
-    font-size:15px;
+    font-size:16px;
     font-family:inherit;
     color:var(--ink);
     cursor:pointer;
@@ -200,11 +204,11 @@
     border-radius:3px;
     padding:12px 14px;
     font-family:inherit;
-    font-size:14px;
+    font-size:16px;
     color:var(--ink);
     background:var(--paper);
     resize:vertical;
-    min-height:90px;
+    min-height:96px;
     line-height:1.6;
   }
   input[type="text"]{min-height:auto;}
@@ -314,6 +318,13 @@
   @media (prefers-reduced-motion: reduce){
     .seal{animation:none; transform:rotate(-14deg) scale(1); opacity:1;}
   }
+
+  @media (max-width:360px){
+    .picker, form, .done{ padding-left:16px; padding-right:16px; }
+    .stub{ margin-left:16px; margin-right:16px; }
+    .stars{ gap:6px; }
+    .star-label{ width:auto; flex:1; height:44px; }
+  }
 </style>
 </head>
 <body>
@@ -380,9 +391,19 @@
   <footer>大灣高中教師研習回饋系統</footer>
 </div>
 
+<iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+<form id="post-form" method="POST" target="hidden_iframe" style="display:none;">
+  <input type="hidden" name="eventName">
+  <input type="hidden" name="eventDate">
+  <input type="hidden" name="rating">
+  <input type="hidden" name="feedback">
+  <input type="hidden" name="recommend">
+  <input type="hidden" name="timestamp">
+</form>
+
 <script>
   // ⚠️ 請將下方網址替換為您部署 Google Apps Script 網頁應用程式後取得的網址
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKPSS1_-p442ijiygwo4NItk4PYYF5WRO7AjtMM_4lcRDEB3oQ3m4Qb27nrCg1HLdC_A/exec";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwMzytyv9UB_uOl2DIWedFvZPHbbggDhZi2R_CW7NX8Vggjv-JtCr5n-FwCkHhcv5NPig/exec";
 
   // 研習場次資料（已依日期排序）
   const EVENTS = [
@@ -403,6 +424,8 @@
   const done = document.getElementById('done');
   const submitBtn = document.getElementById('submit-btn');
   const errMsg = document.getElementById('err-msg');
+  const postForm = document.getElementById('post-form');
+  const hiddenIframe = document.getElementById('hidden_iframe');
 
   EVENTS.forEach((ev, i) => {
     const opt = document.createElement('option');
@@ -445,27 +468,29 @@
     submitBtn.disabled = true;
     submitBtn.textContent = '送出中...';
 
-    // 使用 text/plain 避免瀏覽器對 Apps Script 送出 CORS 預檢請求
-    fetch(SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload)
-    })
-      .then(() => {
-        form.classList.remove('show');
-        stub.classList.remove('show');
-        done.classList.add('show');
-      })
-      .catch(() => {
-        // 即使無法讀取回應（跨網域限制），只要沒有拋出網路層錯誤即視為送出成功
-        form.classList.remove('show');
-        stub.classList.remove('show');
-        done.classList.add('show');
-      })
-      .finally(() => {
-        submitBtn.disabled = false;
-        submitBtn.textContent = '送出回饋';
-      });
+    // 以隱藏表單透過 iframe 提交（非 fetch），這是實體的表單導航而非跨網域請求，
+    // 手機瀏覽器（特別是 iOS Safari 的第三方追蹤防護）不會擋下，最不容易失敗。
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      form.classList.remove('show');
+      stub.classList.remove('show');
+      done.classList.add('show');
+      submitBtn.disabled = false;
+      submitBtn.textContent = '送出回饋';
+    };
+
+    hiddenIframe.onload = finish;
+    // 保險：若 iframe 的 load 事件在部分瀏覽器沒有觸發，3 秒後仍視為送出完成
+    setTimeout(finish, 3000);
+
+    postForm.action = SCRIPT_URL;
+    Object.keys(payload).forEach(key => {
+      const input = postForm.querySelector('[name="' + key + '"]');
+      if (input) input.value = payload[key];
+    });
+    postForm.submit();
   });
 
   document.getElementById('again-btn').addEventListener('click', () => {
