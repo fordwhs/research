@@ -485,6 +485,10 @@
     hiddenIframe.onload = finish;
     // 保險：若 iframe 的 load 事件在部分瀏覽器沒有觸發，3 秒後仍視為送出完成
     setTimeout(finish, 3000);
+    // 除錯用：捲動到 iframe 位置，方便直接看到後台回傳的內容
+    setTimeout(() => {
+      hiddenIframe.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 600);
 
     postForm.action = SCRIPT_URL;
     Object.keys(payload).forEach(key => {
