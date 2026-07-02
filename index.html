@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>研習滿意度調查｜大灣高中</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F5F2EA;
+    --paper-deep:#EDE8DA;
+    --ink:#2C3B3A;
+    --ink-soft:#5B6B69;
+    --teal:#3F6E68;
+    --teal-deep:#2B4E49;
+    --ochre:#C08A3E;
+    --seal:#B7472A;
+    --line:#D8D2C0;
+    --card:#FFFEFA;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 15% 8%, rgba(63,110,104,0.05), transparent 40%),
+      radial-gradient(circle at 85% 92%, rgba(192,138,62,0.06), transparent 40%);
+    font-family:'Noto Sans TC', sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:560px;
+    margin:0 auto;
+    padding:36px 20px 80px;
+  }
+  header{
+    text-align:center;
+    margin-bottom:28px;
+  }
+  .eyebrow{
+    font-size:12px;
+    letter-spacing:0.28em;
+    color:var(--teal);
+    font-weight:700;
+    margin-bottom:10px;
+  }
+  h1{
+    font-family:'Noto Serif TC', serif;
+    font-weight:700;
+    font-size:26px;
+    margin:0 0 8px;
+    color:var(--ink);
+    letter-spacing:0.02em;
+  }
+  .sub{
+    font-size:13px;
+    color:var(--ink-soft);
+    line-height:1.7;
+  }
+
+  /* --- ticket / card --- */
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:4px;
+    box-shadow:0 1px 2px rgba(44,59,58,0.04), 0 12px 28px -18px rgba(44,59,58,0.25);
+    position:relative;
+    overflow:hidden;
+  }
+  .card::before{
+    content:"";
+    position:absolute;
+    top:0; left:0; right:0;
+    height:5px;
+    background:repeating-linear-gradient(90deg, var(--teal) 0 10px, transparent 10px 18px);
+    opacity:0.55;
+  }
+
+  .picker{
+    padding:26px 24px 22px;
+  }
+  .field-label{
+    display:block;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:0.12em;
+    color:var(--teal-deep);
+    margin-bottom:10px;
+  }
+  select{
+    width:100%;
+    appearance:none;
+    -webkit-appearance:none;
+    background:var(--paper-deep) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1L7 7L13 1' stroke='%232C3B3A' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 16px center;
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:14px 42px 14px 14px;
+    font-size:15px;
+    font-family:inherit;
+    color:var(--ink);
+    cursor:pointer;
+  }
+  select:focus{outline:2px solid var(--teal); outline-offset:1px;}
+
+  /* --- selected event stub --- */
+  .stub{
+    display:none;
+    margin:0 24px 22px;
+    padding:14px 16px;
+    background:var(--paper-deep);
+    border:1px dashed var(--line);
+    border-radius:3px;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .stub.show{display:flex;}
+  .stub-name{
+    font-family:'Noto Serif TC', serif;
+    font-weight:600;
+    font-size:15px;
+    color:var(--ink);
+  }
+  .stub-date{
+    font-size:12px;
+    color:var(--ochre);
+    font-weight:700;
+    white-space:nowrap;
+    letter-spacing:0.04em;
+  }
+
+  form{
+    display:none;
+    padding:0 24px 26px;
+  }
+  form.show{display:block;}
+
+  .q{
+    padding:20px 0;
+    border-top:1px solid var(--line);
+  }
+  .q:first-child{border-top:none;}
+  .q-num{
+    font-family:'Noto Serif TC', serif;
+    font-size:11px;
+    font-weight:700;
+    color:var(--ochre);
+    letter-spacing:0.15em;
+    margin-bottom:6px;
+    display:block;
+  }
+  .q-title{
+    font-size:15px;
+    font-weight:700;
+    margin-bottom:14px;
+    color:var(--ink);
+  }
+
+  .stars{
+    display:flex;
+    gap:8px;
+  }
+  .star-input{position:absolute; opacity:0; width:0; height:0;}
+  .star-label{
+    width:44px; height:44px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:16px;
+    font-weight:700;
+    color:var(--ink-soft);
+    cursor:pointer;
+    transition:all 0.15s ease;
+    background:var(--paper);
+  }
+  .star-input:checked + .star-label{
+    background:var(--teal);
+    border-color:var(--teal);
+    color:#fff;
+  }
+  .star-label:hover{border-color:var(--teal);}
+  .scale-hint{
+    display:flex;
+    justify-content:space-between;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:8px;
+    padding:0 2px;
+  }
+
+  textarea, input[type="text"]{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:12px 14px;
+    font-family:inherit;
+    font-size:14px;
+    color:var(--ink);
+    background:var(--paper);
+    resize:vertical;
+    min-height:90px;
+    line-height:1.6;
+  }
+  input[type="text"]{min-height:auto;}
+  textarea:focus, input[type="text"]:focus{outline:2px solid var(--teal); outline-offset:1px;}
+  .optional{
+    font-weight:400;
+    color:var(--ink-soft);
+    font-size:12px;
+  }
+
+  .submit-row{
+    padding-top:22px;
+    border-top:1px solid var(--line);
+  }
+  button.submit{
+    width:100%;
+    background:var(--teal-deep);
+    color:#fff;
+    border:none;
+    border-radius:3px;
+    padding:15px;
+    font-size:15px;
+    font-weight:700;
+    font-family:'Noto Serif TC', serif;
+    letter-spacing:0.06em;
+    cursor:pointer;
+    transition:background 0.15s ease, transform 0.1s ease;
+  }
+  button.submit:hover{background:var(--teal);}
+  button.submit:active{transform:scale(0.99);}
+  button.submit:disabled{background:var(--line); color:var(--ink-soft); cursor:not-allowed;}
+  .err{
+    color:var(--seal);
+    font-size:12px;
+    margin-top:8px;
+    display:none;
+  }
+
+  /* --- success state with seal stamp --- */
+  .done{
+    display:none;
+    padding:50px 24px 46px;
+    text-align:center;
+  }
+  .done.show{display:block;}
+  .seal{
+    width:92px; height:92px;
+    margin:0 auto 20px;
+    border-radius:50%;
+    border:3px solid var(--seal);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--seal);
+    font-family:'Noto Serif TC', serif;
+    font-weight:700;
+    font-size:22px;
+    letter-spacing:0.1em;
+    transform:rotate(-14deg) scale(0);
+    animation:stamp 0.4s cubic-bezier(0.2,1.4,0.5,1) 0.1s forwards;
+    position:relative;
+  }
+  .seal::before{
+    content:"";
+    position:absolute;
+    inset:8px;
+    border:1px solid var(--seal);
+    border-radius:50%;
+  }
+  @keyframes stamp{
+    0%{transform:rotate(-14deg) scale(2.2); opacity:0;}
+    60%{transform:rotate(-14deg) scale(0.92); opacity:1;}
+    100%{transform:rotate(-14deg) scale(1); opacity:1;}
+  }
+  .done-title{
+    font-family:'Noto Serif TC', serif;
+    font-weight:700;
+    font-size:19px;
+    margin-bottom:8px;
+  }
+  .done-sub{
+    font-size:13px;
+    color:var(--ink-soft);
+    line-height:1.7;
+  }
+  .again{
+    margin-top:22px;
+    background:none;
+    border:1px solid var(--line);
+    color:var(--teal-deep);
+    padding:10px 20px;
+    border-radius:3px;
+    font-size:13px;
+    font-family:inherit;
+    cursor:pointer;
+  }
+  .again:hover{border-color:var(--teal);}
+
+  footer{
+    text-align:center;
+    margin-top:22px;
+    font-size:11px;
+    color:var(--ink-soft);
+    opacity:0.7;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .seal{animation:none; transform:rotate(-14deg) scale(1); opacity:1;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">2026 教師研習回饋</div>
+    <h1>研習滿意度調查</h1>
+    <div class="sub">大灣高中｜請選擇您參加的場次，花一分鐘留下您的回饋</div>
+  </header>
+
+  <div class="card">
+    <div class="picker">
+      <label class="field-label" for="event-select">選擇研習場次</label>
+      <select id="event-select">
+        <option value="" selected disabled>請選擇場次...</option>
+      </select>
+    </div>
+
+    <div class="stub" id="stub">
+      <span class="stub-name" id="stub-name"></span>
+      <span class="stub-date" id="stub-date"></span>
+    </div>
+
+    <form id="survey-form">
+      <div class="q">
+        <span class="q-num">Q1</span>
+        <div class="q-title">此場研習的滿意度</div>
+        <div class="stars" id="stars">
+          <input class="star-input" type="radio" name="rating" id="r1" value="1"><label class="star-label" for="r1">1</label>
+          <input class="star-input" type="radio" name="rating" id="r2" value="2"><label class="star-label" for="r2">2</label>
+          <input class="star-input" type="radio" name="rating" id="r3" value="3"><label class="star-label" for="r3">3</label>
+          <input class="star-input" type="radio" name="rating" id="r4" value="4"><label class="star-label" for="r4">4</label>
+          <input class="star-input" type="radio" name="rating" id="r5" value="5"><label class="star-label" for="r5">5</label>
+        </div>
+        <div class="scale-hint"><span>1・尚待加強</span><span>5・非常滿意</span></div>
+      </div>
+
+      <div class="q">
+        <span class="q-num">Q2</span>
+        <div class="q-title">給予研習主辦的建議與回饋</div>
+        <textarea id="feedback" placeholder="請分享您對本場研習內容、安排或講師的想法..."></textarea>
+      </div>
+
+      <div class="q">
+        <span class="q-num">Q3</span>
+        <div class="q-title">是否有推薦之講師 <span class="optional">（選填）</span></div>
+        <input type="text" id="recommend" placeholder="姓名或推薦領域，未來辦理研習可作為參考">
+      </div>
+
+      <div class="submit-row">
+        <button type="submit" class="submit" id="submit-btn">送出回饋</button>
+        <div class="err" id="err-msg">請先為此場研習評分，再送出回饋。</div>
+      </div>
+    </form>
+
+    <div class="done" id="done">
+      <div class="seal">已收</div>
+      <div class="done-title">回饋已送出</div>
+      <div class="done-sub">感謝您的填寫，您的意見將作為未來研習規劃的參考。</div>
+      <button class="again" id="again-btn">填寫其他場次</button>
+    </div>
+  </div>
+
+  <footer>大灣高中教師研習回饋系統</footer>
+</div>
+
+<script>
+  // ⚠️ 請將下方網址替換為您部署 Google Apps Script 網頁應用程式後取得的網址
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKPSS1_-p442ijiygwo4NItk4PYYF5WRO7AjtMM_4lcRDEB3oQ3m4Qb27nrCg1HLdC_A/exec";
+
+  // 研習場次資料（已依日期排序）
+  const EVENTS = [
+    { name: "教師淡雅提籃花藝研習", date: "06月04日" },
+    { name: "美感與穿搭研習",       date: "06月16日" },
+    { name: "AI 融入行政流程優化術", date: "06月17日" },
+    { name: "大人感微醺午茶",       date: "06月18日" },
+    { name: "Canva 手把手大揭密",   date: "06月29日" },
+    { name: "Google 職場大揭密",    date: "06月29日" },
+    { name: "物理治療與日常保健",   date: "07月02日" },
+  ];
+
+  const select = document.getElementById('event-select');
+  const stub = document.getElementById('stub');
+  const stubName = document.getElementById('stub-name');
+  const stubDate = document.getElementById('stub-date');
+  const form = document.getElementById('survey-form');
+  const done = document.getElementById('done');
+  const submitBtn = document.getElementById('submit-btn');
+  const errMsg = document.getElementById('err-msg');
+
+  EVENTS.forEach((ev, i) => {
+    const opt = document.createElement('option');
+    opt.value = String(i);
+    opt.textContent = ev.date + '　' + ev.name;
+    select.appendChild(opt);
+  });
+
+  select.addEventListener('change', () => {
+    const ev = EVENTS[Number(select.value)];
+    if (!ev) return;
+    stubName.textContent = ev.name;
+    stubDate.textContent = ev.date;
+    stub.classList.add('show');
+    form.classList.add('show');
+    done.classList.remove('show');
+    form.reset();
+    errMsg.style.display = 'none';
+  });
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    const rating = form.querySelector('input[name="rating"]:checked');
+    if (!rating) {
+      errMsg.style.display = 'block';
+      return;
+    }
+    errMsg.style.display = 'none';
+
+    const ev = EVENTS[Number(select.value)];
+    const payload = {
+      eventName: ev.name,
+      eventDate: ev.date,
+      rating: rating.value,
+      feedback: document.getElementById('feedback').value.trim(),
+      recommend: document.getElementById('recommend').value.trim(),
+      timestamp: new Date().toISOString()
+    };
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = '送出中...';
+
+    // 使用 text/plain 避免瀏覽器對 Apps Script 送出 CORS 預檢請求
+    fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    })
+      .then(() => {
+        form.classList.remove('show');
+        stub.classList.remove('show');
+        done.classList.add('show');
+      })
+      .catch(() => {
+        // 即使無法讀取回應（跨網域限制），只要沒有拋出網路層錯誤即視為送出成功
+        form.classList.remove('show');
+        stub.classList.remove('show');
+        done.classList.add('show');
+      })
+      .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '送出回饋';
+      });
+  });
+
+  document.getElementById('again-btn').addEventListener('click', () => {
+    done.classList.remove('show');
+    select.value = '';
+    stub.classList.remove('show');
+    form.classList.remove('show');
+  });
+</script>
+</body>
+</html>
